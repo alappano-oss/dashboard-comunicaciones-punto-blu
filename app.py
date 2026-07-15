@@ -118,7 +118,7 @@ def load_data():
             108, 128, 110, 143, 98, 123, 17, 10, 22, 114, 81, 102,
             # MAYO
             88, 82, 0,
-            # JUNIO (Tratamiento de "-" como 0)
+            # JUNIO
             187, 46, 97, 52, 0, 0, 56, 98, 13, 36, 5, 181, 267,
             # JULIO
             98, 86, 212, 141, 93, 114, 78
@@ -128,9 +128,9 @@ def load_data():
             "2.0%", "1.1%", "0.1%", "1.5%", "0.6%", "1.2%", "0.0%", "0.3%", "0.8%", "0.9%", "0.2%", "1.2%",
             # MAYO
             "0.7%", "0.5%", "0.0%",
-            # JUNIO (No tienen datos de conversión registrados)
+            # JUNIO
             "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-",
-            # JULIO (No tienen datos de conversión registrados)
+            # JULIO
             "-", "-", "-", "-", "-", "-", "-"
         ]
     }  
@@ -141,7 +141,18 @@ def load_data():
     df["Conversión %"] = df["Conversión %"].replace("-", None)
     df["Conversión %"] = df["Conversión %"].str.rstrip('%').astype('float') / 100.0
     
-    # Clasificación automática por Categorías (Mejorada con palabras clave de Junio y Julio)
+    # Agregamos columnas auxiliares para filtrar por Año, Mes y Nombre del Mes
+    df["Año"] = df["Fecha"].dt.year
+    df["Mes_Num"] = df["Fecha"].dt.month
+    
+    # Diccionario en español para traducir nombres de meses
+    meses_es = {
+        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
+        7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+    }
+    df["Mes"] = df["Mes_Num"].map(meses_es)
+    
+    # Clasificación por Categorías
     def clasificar_categoria(nombre):
         nombre_lower = str(nombre).lower()
         if "tele" in nombre_lower or "tv" in nombre_lower or "smart" in nombre_lower:
@@ -167,15 +178,67 @@ def load_data():
 df = load_data()  
   
 # ==============================================================================
-# 3. FILTROS LATERALES (Sidebar)
+# 3. FILTROS LATERALES TEMPORALES Y DE PLANTILLAS (Sidebar)
 # ==============================================================================
+st.sidebar.header("Filtros Temporales")
+
+# Filtro 1: Año (Multiselección)
+años_disponibles = sorted(df["Año"].dropna().unique())
+selected_years = st.sidebar.multiselect(
+    "Seleccionar Año", 
+    options=años_disponibles, 
+    default=años_disponibles
+)
+
+# Filtro 2: Mes (Multiselección - Sensible al Año seleccionado)
+df_filtered_temp = df[df["Año"].isin(selected_years)]
+meses_disponibles = df_filtered_temp.sort_values("Mes_Num")["Mes"].unique()
+
+selected_months = st.sidebar.multiselect(
+    "Seleccionar Mes", 
+    options=meses_disponibles, 
+    default=meses_disponibles
+)
+
+# Filtro 3: Rango de Fecha exacto (Date Input)
+if not df_filtered_temp.empty:
+    min_date = df_filtered_temp["Fecha"].min().to_pydatetime()
+    max_date = df_filtered_temp["Fecha"].max().to_pydatetime()
+    
+    selected_dates = st.sidebar.date_input(
+        "Rango de Fechas Específico",
+        value=(min_date, max_date),
+        min_value=min_date,
+        max_value=max_date
+    )
+else:
+    selected_dates = []
+
+# --- APLICACIÓN DE FILTROS TEMPORALES AL DATAFRAME BASE ---
+filtered_df = df[df["Año"].isin(selected_years)]
+if len(selected_months) > 0:
+    filtered_df = filtered_df[filtered_df["Mes"].isin(selected_months)]
+
+if len(selected_dates) == 2:
+    start_date, end_date = selected_dates
+    filtered_df = filtered_df[
+        (filtered_df["Fecha"].dt.date >= start_date) & 
+        (filtered_df["Fecha"].dt.date <= end_date)
+    ]
+
+# --- FILTROS DE PLANTILLAS Y CONVERSIÓN ---
+st.sidebar.markdown("---")
 st.sidebar.header("🔍 Filtros de Campaña")  
+
+plantillas_disponibles = sorted(filtered_df["Plantilla"].unique())
 selected_template = st.sidebar.multiselect(
     "Seleccionar Plantilla", 
-    options=df["Plantilla"].unique(), 
-    default=df["Plantilla"].unique()
+    options=plantillas_disponibles, 
+    default=plantillas_disponibles
 )  
-filtered_df = df[df["Plantilla"].isin(selected_template)]  
+
+# Aplicamos filtro de plantillas seleccionadas
+filtered_df = filtered_df[filtered_df["Plantilla"].isin(selected_template)]  
 
 st.sidebar.markdown("---")
 st.sidebar.header("Filtros de Conversión")
@@ -190,23 +253,29 @@ if filtrar_conversiones:
 # ==============================================================================
 # 4. KPIs PRINCIPALES DINÁMICOS
 # ==============================================================================
-col1, col2, col3, col4 = st.columns(4)  
+# Verificación si quedan datos tras aplicar todos los filtros cruzados
+if not filtered_df.empty:
+    col1, col2, col3, col4 = st.columns(4)  
 
-# Identificar campañas que tienen datos de conversiones
-campanas_con_conversion = filtered_df[filtered_df["Conversión %"].notna()]
+    campanas_con_conversion = filtered_df[filtered_df["Conversión %"].notna()]
 
-if len(campanas_con_conversion) > 0:
-    # Promedio ponderado de la conversión de las campañas seleccionadas que tienen datos
-    conversion_promedio = campanas_con_conversion["Conversión %"].mean() * 100
-    label_conversion = "Conversión Promedio"
+    if len(campanas_con_conversion) > 0:
+        conversion_promedio = campanas_con_conversion["Conversión %"].mean() * 100
+        label_conversion = "Conversión Promedio"
+    else:
+        conversion_promedio = 0.0
+        label_conversion = "Conversión (Sin datos)"
+
+    total_entregados = filtered_df['Entregados'].sum()
+    tasa_lectura = (filtered_df['Leidos'].sum() / total_entregados * 100) if total_entregados > 0 else 0.0
+
+    col1.metric("Total Enviados", f"{filtered_df['Enviados'].sum():,}")  
+    col2.metric("Total Entregados", f"{total_entregados:,}")  
+    col3.metric("Tasa de Lectura", f"{tasa_lectura:.1f}%")  
+    col4.metric(label_conversion, f"{conversion_promedio:.1f}%")  
 else:
-    conversion_promedio = 0.0
-    label_conversion = "Conversión (Sin datos)"
-
-col1.metric("Total Enviados", f"{filtered_df['Enviados'].sum():,}")  
-col2.metric("Total Entregados", f"{filtered_df['Entregados'].sum():,}")  
-col3.metric("Tasa de Lectura", f"{(filtered_df['Leidos'].sum() / filtered_df['Entregados'].sum() * 100):.1f}%")  
-col4.metric(label_conversion, f"{conversion_promedio:.1f}%")  
+    st.warning("No hay datos que coincidan con la combinación de filtros seleccionados en el sidebar.")
+    st.stop() # Frena la ejecución visual si no hay datos disponibles
 
 st.write("---")
 
@@ -227,12 +296,10 @@ with col_graf1:
     ]  
 
     if len(campanas_con_conversion) > 0:
-        # Estimación de ventas reales (Enviados * % de Conversión)
         ventas_reales = (campanas_con_conversion["Enviados"] * campanas_con_conversion["Conversión %"]).sum()
         etapas.append("Conversión (Venta)")
         valores.append(int(ventas_reales))
 
-    # Gráfico con degradado de colores de marca
     fig_funnel = go.Figure(go.Funnel(  
         y=etapas,  
         x=valores,
@@ -244,13 +311,11 @@ with col_graf1:
 
 with col_graf2:
     st.subheader("Tasa de Respuesta por Categoría")
-    # Agrupación y cálculo por categorías de producto
     df_cat = filtered_df.groupby("Categoría").agg({
         "Leidos": "sum",
         "Respuestas": "sum"
     }).reset_index()
     
-    # Previene división por cero
     df_cat["Tasa Respuesta %"] = df_cat.apply(
         lambda r: (r["Respuestas"] / r["Leidos"] * 100) if r["Leidos"] > 0 else 0, axis=1
     )
@@ -260,7 +325,7 @@ with col_graf2:
         x="Categoría", 
         y="Tasa Respuesta %", 
         text_auto='.1f',
-        color_discrete_sequence=["#0760f7"] # Azul Eléctrico
+        color_discrete_sequence=["#0760f7"]
     )
     fig_bar_cat.update_layout(
         height=380, 
@@ -273,20 +338,17 @@ with col_graf2:
 st.write("---")
 
 # ==============================================================================
-# 6. BLOQUE DE COMPARACIÓN POR PLANTILLA Y TENDENCIA TEMPORAL (Barras Horizontales e Hilo Temporal)
+# 6. BLOQUE DE COMPARACIÓN POR PLANTILLA Y TENDENCIA TEMPORAL
 # ==============================================================================
 col_graf3, col_graf4 = st.columns(2)
 
 with col_graf3:
     st.subheader("Clics vs. Respuestas por Plantilla")
     
-    # Ordenamos el DataFrame por Respuestas para que el mayor quede arriba en barras horizontales
     df_sorted = filtered_df.sort_values(by="Respuestas", ascending=True)
     
-    # Construimos el gráfico de barras agrupadas horizontales usando Plotly Graph Objects
     fig_grouped_bar = go.Figure()
     
-    # Agregamos la barra para Clics (Azul Eléctrico)
     fig_grouped_bar.add_trace(go.Bar(
         y=df_sorted["Plantilla"],
         x=df_sorted["Clicks"],
@@ -295,7 +357,6 @@ with col_graf3:
         marker_color="#0760f7"
     ))
     
-    # Agregamos la barra para Respuestas (Amarillo de marca)
     fig_grouped_bar.add_trace(go.Bar(
         y=df_sorted["Plantilla"],
         x=df_sorted["Respuestas"],
@@ -304,9 +365,12 @@ with col_graf3:
         marker_color="#FBBA00"
     ))
     
+    # Ajustamos la altura dinámicamente según la cantidad de campañas para que no se amontonen
+    altura_dinamica = max(350, len(df_sorted) * 20)
+    
     fig_grouped_bar.update_layout(
-        barmode="group", # Agrupadas juntas
-        height=500, # Aumentado a 500 para scroll cómodo por el volumen de campañas
+        barmode="group",
+        height=altura_dinamica,
         margin=dict(l=20, r=20, t=10, b=10),
         xaxis_title="Cantidad de Interacciones",
         yaxis_title="Plantillas",
@@ -324,9 +388,9 @@ with col_graf4:
         x="Fecha", 
         y=["Leidos", "Clicks", "Respuestas"],
         color_discrete_map={
-            "Leidos": "#024099",      # Azul Oscuro
-            "Clicks": "#0760f7",      # Azul Eléctrico
-            "Respuestas": "#FBBA00"   # Amarillo
+            "Leidos": "#024099",
+            "Clicks": "#0760f7",
+            "Respuestas": "#FBBA00"
         }
     )
     fig_line.update_layout(
