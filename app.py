@@ -205,7 +205,8 @@ with col_graf3:
         subset=["Mensajes Respondidos"], cmap="YlOrBr"
     )
     
-    st.write(df_styled, use_container_width=True)
+    # Renderizado seguro compatible con las últimas versiones de Pandas y Python
+    st.dataframe(df_styled)
 
 with col_graf4:
     st.subheader("Evolución Temporal del Rendimiento")
