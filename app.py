@@ -228,7 +228,7 @@ if len(selected_dates) == 2:
 
 # --- FILTROS DE PLANTILLAS Y CONVERSIÓN ---
 st.sidebar.markdown("---")
-st.sidebar.header("🔍 Filtros de Campaña")  
+st.sidebar.header("Filtros de Campaña")  
 
 plantillas_disponibles = sorted(filtered_df["Plantilla"].unique())
 selected_template = st.sidebar.multiselect(
