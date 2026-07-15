@@ -89,7 +89,7 @@ selected_template = st.sidebar.multiselect(
 filtered_df = df[df["Plantilla"].isin(selected_template)]  
 
 st.sidebar.markdown("---")
-st.sidebar.header("🎯 Filtros de Conversión")
+st.sidebar.header("Filtros de Conversión")
 filtrar_conversiones = st.sidebar.checkbox(
     "Mostrar solo campañas con datos de Conversión", 
     value=False
@@ -127,7 +127,7 @@ st.write("---")
 col_graf1, col_graf2 = st.columns(2)
 
 with col_graf1:
-    st.subheader("🎯 Embudo de Conversión Consolidado")  
+    st.subheader("Embudo de Conversión Consolidado")  
     etapas = ["Enviados", "Entregados", "Leídos", "Clicks", "Respuestas"]
     valores = [
         filtered_df["Enviados"].sum(), 
