@@ -35,19 +35,104 @@ st.title("Tablero de Rendimiento de Campañas - Punto Blu")
 st.write("---")
 
 # ==============================================================================
-# 2. CARGA, LIMPIEZA Y CLASIFICACIÓN DE DATOS
+# 2. CARGA, LIMPIEZA Y CLASIFICACIÓN DE DATOS (BD COMPLETA 2026)
 # ==============================================================================
 @st.cache_data  
 def load_data():  
     data = {  
-        "Fecha": ["01-04-2026", "06-04-2026", "06-04-2026", "08-04-2026", "08-04-2026", "14-04-2026", "16-04-2026", "20-04-2026", "21-04-2026", "22-04-2026", "27-04-2026", "27-04-2026", "04-05-2026", "07-05-2026", "19-05-2026", "01-07-2026", "02-07-2026", "03-07-2026", "06-07-2026", "07-07-2026", "08-07-2026", "10-07-2026"],  
-        "Plantilla": ["lineablanca b", "Lineablanca_b2", "televisores 12si", "lineablanca a", "televisoresb12si", "electro_cocina", "celulares 12si", "accion_paracocina260420", "accion 9si260421", "sommiers24si", "linea hogar260427", "teles_celus260427", "tv mayo260504", "calefa 260507", "sucus 260519", "alto_sommiers", "alto_herramientas", "minicuotas_celulares", "flash_tromen", "Linea_blanca", "faustina", "Flash Smart"],  
-        "Enviados": [935, 1100, 645, 533, 874, 747, 228, 378, 1700, 378, 1600, 1300, 1800, 935, 839, 791, 775, 797, 796, 795, 797, 792],  
-        "Entregados": [908, 1100, 629, 526, 847, 734, 214, 364, 1700, 363, 1500, 1200, 1700, 912, 809, 716, 708, 732, 730, 731, 701, 714],  
-        "Leidos": [752, 903, 518, 430, 691, 625, 157, 298, 1400, 279, 1200, 974, 1300, 742, 641, 603, 555, 620, 611, 596, 589, 571],  
-        "Respuestas": [112, 139, 93, 119, 120, 114, 22, 27, 146, 26, 104, 120, 126, 88, 13, 98, 87, 212, 141, 93, 116, 78],  
-        "Clicks": [108, 143, 98, 128, 110, 123, 17, 22, 114, 10, 81, 102, 88, 82, 0, 98, 86, 212, 141, 93, 114, 78], 
-        "Conversión %": ["2.0%", "1.5%", "0.6%", "1.1%", "0.2%", "1.2%", "0.0%", "0.8%", "0.9%", "0.3%", "0.2%", "1.3%", "0.7%", "0.5%", "0.0%", "-", "-", "-", "-", "-", "-", "-"]
+        "Fecha": [
+            # ABRIL
+            "01-04-2026", "01-04-2026", "08-04-2026", "06-04-2026", "06-04-2026", 
+            "14-04-2026", "16-04-2026", "22-04-2026", "20-04-2026", "21-04-2026", 
+            "27-04-2026", "27-04-2026",
+            # MAYO
+            "04-05-2026", "07-05-2026", "19-05-2026",
+            # JUNIO
+            "02-06-2026", "02-06-2026", "09-06-2026", "09-06-2026", "16-06-2026", 
+            "16-06-2026", "17-06-2026", "17-06-2026", "22-06-2026", "23-06-2026", 
+            "23-06-2026", "24-06-2026", "24-06-2026",
+            # JULIO
+            "01-07-2026", "02-07-2026", "03-07-2026", "06-07-2026", "07-07-2026", 
+            "08-07-2026", "10-07-2026"
+        ],  
+        "Plantilla": [
+            # ABRIL
+            "lineablanca_b", "lineablanca_a", "televisoresb12si", "lineablanca_b2", "televisores_12si", 
+            "electro_cocina", "celulares_12si", "sommiers24si", "accion_paracocina260420", "accion_9si260421", 
+            "linea_hogar260427", "teles_celus260427",
+            # MAYO
+            "tv_mayo260504", "calefa_260507", "sucus_260519",
+            # JUNIO
+            "dia_del_padre_disp_bajo_260602", "generico_disp_alto_260602", "dia_del_padre_disp_bajo_260609", 
+            "generico_disp_alto_megaclub_260609", "blu_generico_disp_alto_megaclub_260616", "blu_generico_disp_bajo_megaclub_260616", 
+            "blu_generico_disp_alto_megaclub_260617", "blu_generico_disp_bajo_megaclub_260617", "blu_generico_disponible_alto_diferido_260622", 
+            "blu_generico_disp_bajo_diferido_260623", "blu_generico_disponible_alto_diferido_260623", "blu_generico_disponible_alto_diferido_260624", 
+            "blu_generico_disp_bajo_diferido_260624",
+            # JULIO
+            "blu_generico_disponible_alto_sommiers_260701", "blu_generico_disponible_alto_herramientas_260702", 
+            "minicuotas_celulares_260703", "flash_tromen_260706", "linea_blanca_260707", 
+            "faustina_260708", "Flash Smart 260710"
+        ],  
+        "Enviados": [
+            # ABRIL
+            935, 533, 874, 1100, 645, 747, 228, 378, 378, 1700, 1600, 1300,
+            # MAYO
+            1800, 935, 839,
+            # JUNIO
+            751, 261, 516, 267, 121, 123, 377, 379, 157, 234, 36, 1980, 1890,
+            # JULIO
+            791, 775, 797, 796, 795, 797, 792
+        ],  
+        "Entregados": [
+            # ABRIL
+            908, 526, 847, 1100, 629, 734, 214, 363, 364, 1700, 1500, 1200,
+            # MAYO
+            1700, 912, 809,
+            # JUNIO
+            738, 252, 506, 258, 110, 114, 327, 330, 139, 209, 32, 1750, 1700,
+            # JULIO
+            716, 708, 732, 730, 731, 701, 714
+        ],  
+        "Leidos": [
+            # ABRIL
+            752, 430, 691, 903, 518, 625, 157, 279, 298, 1400, 1200, 974,
+            # MAYO
+            1300, 742, 641,
+            # JUNIO
+            588, 210, 399, 213, 93, 105, 267, 294, 119, 182, 24, 1470, 1380,
+            # JULIO
+            603, 555, 620, 611, 596, 589, 571
+        ],  
+        "Respuestas": [
+            # ABRIL
+            112, 119, 120, 139, 93, 114, 22, 26, 27, 146, 104, 120,
+            # MAYO
+            126, 88, 13,
+            # JUNIO
+            165, 42, 88, 58, 12, 18, 56, 98, 13, 36, 5, 181, 267,
+            # JULIO
+            98, 87, 212, 141, 93, 116, 78
+        ],  
+        "Clicks": [
+            # ABRIL
+            108, 128, 110, 143, 98, 123, 17, 10, 22, 114, 81, 102,
+            # MAYO
+            88, 82, 0,
+            # JUNIO (Tratamiento de "-" como 0)
+            187, 46, 97, 52, 0, 0, 56, 98, 13, 36, 5, 181, 267,
+            # JULIO
+            98, 86, 212, 141, 93, 114, 78
+        ],
+        "Conversión %": [
+            # ABRIL
+            "2.0%", "1.1%", "0.1%", "1.5%", "0.6%", "1.2%", "0.0%", "0.3%", "0.8%", "0.9%", "0.2%", "1.2%",
+            # MAYO
+            "0.7%", "0.5%", "0.0%",
+            # JUNIO (No tienen datos de conversión registrados)
+            "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-",
+            # JULIO (No tienen datos de conversión registrados)
+            "-", "-", "-", "-", "-", "-", "-"
+        ]
     }  
     df = pd.DataFrame(data)  
     df["Fecha"] = pd.to_datetime(df["Fecha"], format="%d-%m-%Y", errors="coerce")  
@@ -56,12 +141,12 @@ def load_data():
     df["Conversión %"] = df["Conversión %"].replace("-", None)
     df["Conversión %"] = df["Conversión %"].str.rstrip('%').astype('float') / 100.0
     
-    # Clasificación automática por Categorías
+    # Clasificación automática por Categorías (Mejorada con palabras clave de Junio y Julio)
     def clasificar_categoria(nombre):
         nombre_lower = str(nombre).lower()
         if "tele" in nombre_lower or "tv" in nombre_lower or "smart" in nombre_lower:
             return "TV y Pantallas"
-        elif "lineablanca" in nombre_lower or "cocina" in nombre_lower or "hogar" in nombre_lower:
+        elif "lineablanca" in nombre_lower or "cocina" in nombre_lower or "hogar" in nombre_lower or "tromen" in nombre_lower:
             return "Línea Blanca / Hogar"
         elif "celu" in nombre_lower:
             return "Celulares"
@@ -69,6 +154,10 @@ def load_data():
             return "Sommiers"
         elif "calefa" in nombre_lower:
             return "Climatización"
+        elif "padre" in nombre_lower:
+            return "Día del Padre"
+        elif "herramientas" in nombre_lower:
+            return "Herramientas"
         else:
             return "Otros / Genéricos"
             
@@ -127,7 +216,7 @@ st.write("---")
 col_graf1, col_graf2 = st.columns(2)
 
 with col_graf1:
-    st.subheader("Embudo de Conversión Consolidado")  
+    st.subheader("Embudo de Conversión")  
     etapas = ["Enviados", "Entregados", "Leídos", "Clicks", "Respuestas"]
     valores = [
         filtered_df["Enviados"].sum(), 
@@ -184,14 +273,14 @@ with col_graf2:
 st.write("---")
 
 # ==============================================================================
-# 6. BLOQUE DE COMPARACIÓN POR PLANTILLA Y TENDENCIA TEMPORAL (Opción A y Línea de Tiempo)
+# 6. BLOQUE DE COMPARACIÓN POR PLANTILLA Y TENDENCIA TEMPORAL (Barras Horizontales e Hilo Temporal)
 # ==============================================================================
 col_graf3, col_graf4 = st.columns(2)
 
 with col_graf3:
     st.subheader("Clics vs. Respuestas por Plantilla")
     
-    # Ordenamos el DataFrame por Respuestas (ascendente para que el mayor quede arriba en barras horizontales)
+    # Ordenamos el DataFrame por Respuestas para que el mayor quede arriba en barras horizontales
     df_sorted = filtered_df.sort_values(by="Respuestas", ascending=True)
     
     # Construimos el gráfico de barras agrupadas horizontales usando Plotly Graph Objects
@@ -217,7 +306,7 @@ with col_graf3:
     
     fig_grouped_bar.update_layout(
         barmode="group", # Agrupadas juntas
-        height=350,
+        height=500, # Aumentado a 500 para scroll cómodo por el volumen de campañas
         margin=dict(l=20, r=20, t=10, b=10),
         xaxis_title="Cantidad de Interacciones",
         yaxis_title="Plantillas",
@@ -241,7 +330,7 @@ with col_graf4:
         }
     )
     fig_line.update_layout(
-        height=350, 
+        height=500, 
         margin=dict(l=20, r=20, t=10, b=10),
         xaxis_title="Línea de Tiempo",
         yaxis_title="Cantidad de Eventos"
