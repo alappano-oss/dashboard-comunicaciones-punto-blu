@@ -184,29 +184,47 @@ with col_graf2:
 st.write("---")
 
 # ==============================================================================
-# 6. BLOQUE DE RANKING Y TENDENCIA TEMPORAL (Ranking Interactivo e Hilo Temporal)
+# 6. BLOQUE DE COMPARACIÓN POR PLANTILLA Y TENDENCIA TEMPORAL (Opción A y Línea de Tiempo)
 # ==============================================================================
 col_graf3, col_graf4 = st.columns(2)
 
 with col_graf3:
-    st.subheader("Interacción por Plantilla")
+    st.subheader("Clics vs. Respuestas por Plantilla")
     
-    # Seleccionamos las columnas clave y ordenamos por Respuestas de mayor a menor
-    df_ranking = filtered_df[["Plantilla", "Categoría", "Clicks", "Respuestas"]].copy()
-    df_ranking = df_ranking.sort_values(by="Respuestas", ascending=False)
+    # Ordenamos el DataFrame por Respuestas (ascendente para que el mayor quede arriba en barras horizontales)
+    df_sorted = filtered_df.sort_values(by="Respuestas", ascending=True)
     
-    # Renombramos las columnas para la tabla visual
-    df_ranking.columns = ["Plantilla", "Categoría", "Clics en Enlaces", "Mensajes Respondidos"]
+    # Construimos el gráfico de barras agrupadas horizontales usando Plotly Graph Objects
+    fig_grouped_bar = go.Figure()
     
-    # Estilo de mapa de calor suave (Azul para Clics, Amarillo/Naranja para Respuestas)
-    df_styled = df_ranking.style.background_gradient(
-        subset=["Clics en Enlaces"], cmap="Blues"
-    ).background_gradient(
-        subset=["Mensajes Respondidos"], cmap="YlOrBr"
+    # Agregamos la barra para Clics (Azul Eléctrico)
+    fig_grouped_bar.add_trace(go.Bar(
+        y=df_sorted["Plantilla"],
+        x=df_sorted["Clicks"],
+        name="Clics",
+        orientation="h",
+        marker_color="#0760f7"
+    ))
+    
+    # Agregamos la barra para Respuestas (Amarillo de marca)
+    fig_grouped_bar.add_trace(go.Bar(
+        y=df_sorted["Plantilla"],
+        x=df_sorted["Respuestas"],
+        name="Respuestas",
+        orientation="h",
+        marker_color="#FBBA00"
+    ))
+    
+    fig_grouped_bar.update_layout(
+        barmode="group", # Agrupadas juntas
+        height=350,
+        margin=dict(l=20, r=20, t=10, b=10),
+        xaxis_title="Cantidad de Interacciones",
+        yaxis_title="Plantillas",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
     
-    # Renderizado seguro compatible con las últimas versiones de Pandas y Python
-    st.dataframe(df_styled)
+    st.plotly_chart(fig_grouped_bar, use_container_width=True)
 
 with col_graf4:
     st.subheader("Evolución Temporal del Rendimiento")
