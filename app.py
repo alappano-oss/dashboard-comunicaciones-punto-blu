@@ -205,12 +205,7 @@ with col_graf3:
         subset=["Mensajes Respondidos"], cmap="YlOrBr"
     )
     
-    st.dataframe(
-        df_styled, 
-        use_container_width=True, 
-        height=350,
-        hide_index=True
-    )
+    st.write(df_styled, use_container_width=True)
 
 with col_graf4:
     st.subheader("Evolución Temporal del Rendimiento")
