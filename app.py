@@ -189,24 +189,30 @@ st.write("---")
 col_graf3, col_graf4 = st.columns(2)
 
 with col_graf3:
-    st.subheader("Relación: Clics vs. Respuestas")
-    # Gráfico de dispersión utilizando el amarillo para destacar los puntos
-    fig_scatter = px.scatter(
-        filtered_df, 
-        x="Clicks", 
-        y="Respuestas", 
-        size="Enviados", 
-        color_discrete_sequence=["#FBBA00"], # Amarillo Punto Blu
-        hover_name="Plantilla"
+    st.subheader("🏆 Ranking de Interacción por Plantilla")
+    
+    # Seleccionamos las columnas clave y ordenamos por Respuestas de mayor a menor
+    df_ranking = filtered_df[["Plantilla", "Categoría", "Clicks", "Respuestas"]].copy()
+    df_ranking = df_ranking.sort_values(by="Respuestas", ascending=False)
+    
+    # Renombramos las columnas para que se vean más profesionales en la tabla
+    df_ranking.columns = ["Plantilla", "Categoría", "Clics en Enlaces", "Mensajes Respondidos"]
+    
+    # Aplicamos un estilo de mapa de calor (gradiente de color) para identificar rápido los valores altos
+    # Usamos tonos suaves de azul para los Clics y de amarillo/naranja para las Respuestas
+    df_styled = df_ranking.style.background_gradient(
+        subset=["Clics en Enlaces"], cmap="Blues"
+    ).background_gradient(
+        subset=["Mensajes Respondidos"], cmap="YlOrBr"
     )
-    fig_scatter.update_layout(
-        height=350, 
-        margin=dict(l=20, r=20, t=10, b=10),
-        xaxis_title="Clicks en la plantilla",
-        yaxis_title="Respuestas generadas"
+    
+    # Renderizamos la tabla interactiva de Streamlit ocupando todo el ancho
+    st.dataframe(
+        df_styled, 
+        use_container_width=True, 
+        height=350,
+        hide_index=True # Oculta la columna de índices de Python para que quede más limpio
     )
-    st.plotly_chart(fig_scatter, use_container_width=True)
-
 with col_graf4:
     st.subheader("Evolución Temporal del Rendimiento")
     df_timeline = filtered_df.sort_values(by="Fecha")
