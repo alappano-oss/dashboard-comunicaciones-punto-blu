@@ -80,7 +80,7 @@ df = load_data()
 # ==============================================================================
 # 3. FILTROS LATERALES (Sidebar)
 # ==============================================================================
-st.sidebar.header("🔍 Filtros de Campaña")  
+st.sidebar.header("Filtros de Campaña")  
 selected_template = st.sidebar.multiselect(
     "Seleccionar Plantilla", 
     options=df["Plantilla"].unique(), 
